@@ -1,0 +1,20 @@
+# Minimal backend runtime + test dependencies
+# Bu dosya bilinçli olarak sade tutuldu.
+# Önceki sürümde otomatik freeze çıktısı çok şişkindi ve APScheduler==3.11.2.post1 geçersiz olduğu için kurulum duruyordu.
+
+fastapi>=0.110.1,<1.0.0
+uvicorn[standard]>=0.25.0,<1.0.0
+motor>=3.3.1,<4.0.0
+pymongo>=4.5.0,<5.0.0
+pydantic>=2.6.0,<3.0.0
+email-validator>=2.0.0,<3.0.0
+python-dotenv>=1.0.0,<2.0.0
+python-multipart>=0.0.9,<1.0.0
+PyJWT>=2.8.0,<3.0.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+httpx>=0.27.0,<1.0.0
+openai>=1.90.0,<2.0.0
+APScheduler==3.11.2
+pytest>=8.0.0,<10.0.0
+pytest-asyncio>=0.23.0,<2.0.0

@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -26,6 +27,7 @@ interface AppCardProps {
 
 export const AppCard: React.FC<AppCardProps> = ({ children, style, onPress, variant = 'default' }) => {
   const colors = useThemeColors();
+
   const cardStyle = [
     styles.card,
     {
@@ -71,6 +73,7 @@ export const Button: React.FC<ButtonProps> = ({
   fullWidth = false,
 }) => {
   const colors = useThemeColors();
+
   const backgroundByVariant = {
     primary: colors.primary,
     secondary: colors.secondary,
@@ -78,7 +81,9 @@ export const Button: React.FC<ButtonProps> = ({
     outline: colors.backgroundElevated,
     ghost: 'transparent',
   };
+
   const textColor = variant === 'outline' || variant === 'ghost' ? colors.primary : colors.textOnPrimary;
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -116,8 +121,10 @@ interface IconButtonProps {
 
 export const IconButton: React.FC<IconButtonProps> = ({ icon, onPress, size = 'md', color, backgroundColor }) => {
   const colors = useThemeColors();
+
   const iconSize = size === 'sm' ? 18 : size === 'lg' ? 28 : 22;
   const buttonSize = size === 'sm' ? 34 : size === 'lg' ? 50 : 40;
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -149,6 +156,7 @@ interface ChipProps {
 export const Chip: React.FC<ChipProps> = ({ label, onPress, variant = 'filled', color, icon, onDelete }) => {
   const colors = useThemeColors();
   const appliedColor = color ?? colors.primary;
+
   const content = (
     <>
       {icon ? <Ionicons name={icon} size={14} color={appliedColor} style={{ marginRight: 4 }} /> : null}
@@ -160,11 +168,13 @@ export const Chip: React.FC<ChipProps> = ({ label, onPress, variant = 'filled', 
       ) : null}
     </>
   );
+
   const wrapperStyle = [
     styles.chip,
     variant === 'filled' && { backgroundColor: `${appliedColor}18` },
     variant === 'outlined' && { borderColor: appliedColor, borderWidth: 1 },
   ];
+
   return onPress ? (
     <TouchableOpacity onPress={onPress} style={wrapperStyle} activeOpacity={0.8}>
       {content}
@@ -182,47 +192,76 @@ export const EmptyState: React.FC<{
   onAction?: () => void;
 }> = ({ icon, title, description, actionLabel, onAction }) => {
   const colors = useThemeColors();
+
   return (
     <View style={styles.emptyState}>
       <View style={[styles.emptyStateIconContainer, { backgroundColor: colors.gray100 }]}>
         <Ionicons name={icon} size={58} color={colors.gray400} />
       </View>
+
       <Text style={[styles.emptyStateTitle, { color: colors.textPrimary }]}>{title}</Text>
-      {description ? <Text style={[styles.emptyStateDescription, { color: colors.textSecondary }]}>{description}</Text> : null}
+
+      {description ? (
+        <Text style={[styles.emptyStateDescription, { color: colors.textSecondary }]}>{description}</Text>
+      ) : null}
+
       {actionLabel && onAction ? <Button title={actionLabel} onPress={onAction} /> : null}
     </View>
   );
 };
 
-export const SectionHeader: React.FC<{ title: string; subtitle?: string; right?: React.ReactNode }> = ({ title, subtitle, right }) => {
+export const SectionHeader: React.FC<{
+  title: string;
+  subtitle?: string;
+  right?: React.ReactNode;
+}> = ({ title, subtitle, right }) => {
   const colors = useThemeColors();
+
   return (
     <View style={styles.sectionHeader}>
       <View style={{ flex: 1 }}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
         {subtitle ? <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text> : null}
       </View>
+
       {right}
     </View>
   );
 };
 
-export const BottomSheet: React.FC<{ visible: boolean; onClose: () => void; title: string; children: React.ReactNode }> = ({ visible, onClose, title, children }) => {
+export const BottomSheet: React.FC<{
+  visible: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}> = ({ visible, onClose, title, children }) => {
   const colors = useThemeColors();
+
+  const handleClose = () => {
+    Keyboard.dismiss();
+    onClose();
+  };
+
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
       <KeyboardAvoidingView
         style={styles.sheetKeyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        <Pressable style={styles.sheetOverlay} onPress={onClose}>
-          <Pressable style={[styles.sheetContent, { backgroundColor: colors.backgroundElevated }]} onPress={() => undefined}>
+        <Pressable style={styles.sheetOverlay} onPress={Keyboard.dismiss}>
+          <Pressable
+            style={[styles.sheetContent, { backgroundColor: colors.backgroundElevated }]}
+            onPress={(event) => event.stopPropagation()}
+          >
             <View style={styles.sheetHandle} />
-            <SectionHeader title={title} right={<IconButton icon="close" onPress={onClose} />} />
+
+            <SectionHeader title={title} right={<IconButton icon="close" onPress={handleClose} />} />
+
             <ScrollView
               showsVerticalScrollIndicator
-              keyboardShouldPersistTaps="always"
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
               nestedScrollEnabled
               automaticallyAdjustKeyboardInsets
               contentInsetAdjustmentBehavior="automatic"
@@ -246,6 +285,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+
   button: {
     minHeight: 46,
     borderRadius: borderRadius.md,
@@ -256,35 +296,115 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
   },
-  buttonSm: { minHeight: 38 },
-  buttonLg: { minHeight: 54 },
-  buttonOutline: { borderWidth: 1 },
-  buttonText: { ...typography.button },
-  iconButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: borderRadius.round,
+
+  buttonSm: {
+    minHeight: 38,
+  },
+
+  buttonLg: {
+    minHeight: 54,
+  },
+
+  buttonOutline: {
     borderWidth: 1,
   },
-  chip: {
+
+  buttonText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
+  iconButton: {
     borderRadius: borderRadius.round,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  chip: {
+    minHeight: 30,
+    borderRadius: borderRadius.round,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
   },
-  chipText: { fontSize: 13, fontWeight: '600' },
-  emptyState: { alignItems: 'center', padding: spacing.xl, gap: spacing.md },
-  emptyStateIconContainer: { width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center' },
-  emptyStateTitle: { ...typography.h4, textAlign: 'center' },
-  emptyStateDescription: { ...typography.body2, textAlign: 'center' },
-  sectionHeader: { flexDirection: 'row', gap: spacing.md, alignItems: 'center', marginBottom: spacing.md },
-  sectionTitle: { ...typography.h4 },
-  sectionSubtitle: { ...typography.body2, marginTop: 2 },
-  sheetKeyboardView: { flex: 1 },
-  sheetOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.3)', justifyContent: 'flex-end' },
-  sheetContent: { maxHeight: '94%', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
-  sheetScrollContent: { paddingBottom: spacing.xxl + spacing.xl },
-  sheetHandle: { width: 54, height: 6, borderRadius: 4, backgroundColor: '#D0D5DD', alignSelf: 'center', marginBottom: spacing.md },
+
+  chipText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+
+  emptyStateIconContainer: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  emptyStateTitle: {
+    ...typography.h4,
+    textAlign: 'center',
+  },
+
+  emptyStateDescription: {
+    ...typography.body2,
+    textAlign: 'center',
+  },
+
+  sectionHeader: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+
+  sectionTitle: {
+    ...typography.h4,
+  },
+
+  sectionSubtitle: {
+    ...typography.body2,
+    marginTop: 2,
+  },
+
+  sheetKeyboardView: {
+    flex: 1,
+  },
+
+  sheetOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15,23,42,0.3)',
+    justifyContent: 'flex-end',
+  },
+
+  sheetContent: {
+    maxHeight: '90%',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+  },
+
+  sheetHandle: {
+    width: 58,
+    height: 6,
+    borderRadius: 999,
+    backgroundColor: '#CBD5E1',
+    alignSelf: 'center',
+    marginBottom: spacing.md,
+  },
+
+  sheetScrollContent: {
+    paddingBottom: spacing.xxl * 3,
+  },
 });

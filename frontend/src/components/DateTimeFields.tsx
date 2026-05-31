@@ -55,26 +55,34 @@ export const DatePickerField: React.FC<{
   return (
     <View style={styles.wrapper}>
       <Text style={[styles.label, { color: colors.textPrimary }]}>{label}</Text>
+
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={() => setVisible(true)}
         style={[styles.selector, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}
       >
         <Ionicons name="calendar-outline" size={20} color={colors.primary} />
-        <Text style={[styles.selectorText, { color: value ? colors.textPrimary : colors.textSecondary }]}>{displayValue}</Text>
+
+        <Text style={[styles.selectorText, { color: value ? colors.textPrimary : colors.textSecondary }]}>
+          {displayValue}
+        </Text>
+
         {onClear && value ? (
           <TouchableOpacity onPress={onClear}>
             <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         ) : null}
       </TouchableOpacity>
+
       {helper ? <Text style={[styles.helper, { color: colors.textSecondary }]}>{helper}</Text> : null}
+
       {visible ? (
         <View style={[styles.pickerPanel, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
           <View style={styles.pickerHeader}>
             <Text style={[styles.pickerTitle, { color: colors.textPrimary }]}>Secilen tarih</Text>
             <Text style={[styles.pickerValue, { color: colors.primary }]}>{formatDateDisplay(selectedDate)}</Text>
           </View>
+
           <DateTimePicker
             value={selectedDate}
             mode="date"
@@ -84,6 +92,7 @@ export const DatePickerField: React.FC<{
             style={styles.picker}
             onChange={handleChange}
           />
+
           {Platform.OS === 'ios' ? (
             <View style={styles.pickerActions}>
               <Button title="Tamam" variant="outline" onPress={() => setVisible(false)} />
@@ -104,31 +113,51 @@ export const TimeListPicker: React.FC<{
   const colors = useThemeColors();
   const [visible, setVisible] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const currentTime = editingIndex === null ? '08:00' : values[editingIndex] || '08:00';
+  const [tempTime, setTempTime] = useState('08:00');
 
   const openPicker = (index: number | null) => {
+    const initialTime = index === null ? '08:00' : values[index] || '08:00';
+
     setEditingIndex(index);
+    setTempTime(initialTime);
     setVisible(true);
   };
 
   const upsertTime = (time: string) => {
     const nextValues = [...values];
+
     if (editingIndex === null) {
       if (!nextValues.includes(time)) nextValues.push(time);
     } else {
       nextValues[editingIndex] = time;
     }
+
     onChange([...new Set(nextValues)].sort());
   };
 
   const handleChange = (_event: DateTimePickerEvent, date?: Date) => {
-    if (Platform.OS !== 'ios') setVisible(false);
-    if (date) upsertTime(formatTime(date));
+    if (!date) return;
+
+    const nextTime = formatTime(date);
+
+    if (Platform.OS !== 'ios') {
+      setVisible(false);
+      upsertTime(nextTime);
+      return;
+    }
+
+    setTempTime(nextTime);
+  };
+
+  const confirmTime = () => {
+    upsertTime(tempTime);
+    setVisible(false);
   };
 
   return (
     <View style={styles.wrapper}>
       <Text style={[styles.label, { color: colors.textPrimary }]}>{label}</Text>
+
       <View style={styles.timeChips}>
         {values.map((time, index) => (
           <Chip
@@ -140,16 +169,20 @@ export const TimeListPicker: React.FC<{
           />
         ))}
       </View>
+
       <Button title="Saat ekle" variant="outline" icon="add" onPress={() => openPicker(null)} />
+
       {helper ? <Text style={[styles.helper, { color: colors.textSecondary }]}>{helper}</Text> : null}
+
       {visible ? (
         <View style={[styles.pickerPanel, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
           <View style={styles.pickerHeader}>
             <Text style={[styles.pickerTitle, { color: colors.textPrimary }]}>Secilen saat</Text>
-            <Text style={[styles.pickerValue, { color: colors.primary }]}>{currentTime}</Text>
+            <Text style={[styles.pickerValue, { color: colors.primary }]}>{tempTime}</Text>
           </View>
+
           <DateTimePicker
-            value={timeFromValue(currentTime)}
+            value={timeFromValue(tempTime)}
             mode="time"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             is24Hour
@@ -157,9 +190,10 @@ export const TimeListPicker: React.FC<{
             style={styles.picker}
             onChange={handleChange}
           />
+
           {Platform.OS === 'ios' ? (
             <View style={styles.pickerActions}>
-              <Button title="Tamam" variant="outline" onPress={() => setVisible(false)} />
+              <Button title="Tamam" variant="outline" onPress={confirmTime} />
             </View>
           ) : null}
         </View>
@@ -206,21 +240,28 @@ export const DateTimePickerField: React.FC<{
   return (
     <View style={styles.wrapper}>
       <Text style={[styles.label, { color: colors.textPrimary }]}>{label}</Text>
-      <View style={[styles.selector, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}> 
+
+      <View style={[styles.selector, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
         <Ionicons name="calendar-number-outline" size={20} color={colors.primary} />
-        <Text style={[styles.selectorText, { color: value ? colors.textPrimary : colors.textSecondary }]}>{displayValue}</Text>
+        <Text style={[styles.selectorText, { color: value ? colors.textPrimary : colors.textSecondary }]}>
+          {displayValue}
+        </Text>
       </View>
+
       <View style={styles.inlineButtons}>
         <Button title="Tarih sec" variant="outline" icon="calendar-outline" onPress={() => setDateVisible(true)} />
         <Button title="Saat sec" variant="outline" icon="time-outline" onPress={() => setTimeVisible(true)} />
       </View>
+
       {helper ? <Text style={[styles.helper, { color: colors.textSecondary }]}>{helper}</Text> : null}
+
       {dateVisible ? (
         <View style={[styles.pickerPanel, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
           <View style={styles.pickerHeader}>
             <Text style={[styles.pickerTitle, { color: colors.textPrimary }]}>Secilen tarih</Text>
             <Text style={[styles.pickerValue, { color: colors.primary }]}>{formatDateDisplay(selectedDateTime)}</Text>
           </View>
+
           <DateTimePicker
             value={selectedDateTime}
             mode="date"
@@ -229,6 +270,7 @@ export const DateTimePickerField: React.FC<{
             style={styles.picker}
             onChange={handleDateChange}
           />
+
           {Platform.OS === 'ios' ? (
             <View style={styles.pickerActions}>
               <Button title="Tamam" variant="outline" onPress={() => setDateVisible(false)} />
@@ -236,12 +278,14 @@ export const DateTimePickerField: React.FC<{
           ) : null}
         </View>
       ) : null}
+
       {timeVisible ? (
         <View style={[styles.pickerPanel, { backgroundColor: colors.backgroundElevated, borderColor: colors.border }]}>
           <View style={styles.pickerHeader}>
             <Text style={[styles.pickerTitle, { color: colors.textPrimary }]}>Secilen saat</Text>
             <Text style={[styles.pickerValue, { color: colors.primary }]}>{formatTime(selectedDateTime)}</Text>
           </View>
+
           <DateTimePicker
             value={selectedDateTime}
             mode="time"
@@ -251,6 +295,7 @@ export const DateTimePickerField: React.FC<{
             style={styles.picker}
             onChange={handleTimeChange}
           />
+
           {Platform.OS === 'ios' ? (
             <View style={styles.pickerActions}>
               <Button title="Tamam" variant="outline" onPress={() => setTimeVisible(false)} />
@@ -263,26 +308,82 @@ export const DateTimePickerField: React.FC<{
 };
 
 const styles = StyleSheet.create({
-  wrapper: { marginBottom: spacing.md, gap: spacing.xs },
-  label: { marginBottom: 4, fontSize: 14, fontWeight: '700' },
-  helper: { fontSize: 12, lineHeight: 18 },
+  wrapper: {
+    marginBottom: spacing.md,
+  },
+
+  label: {
+    marginBottom: 8,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
   selector: {
-    minHeight: 48,
-    borderWidth: 1,
+    minHeight: 52,
     borderRadius: borderRadius.md,
+    borderWidth: 1,
     paddingHorizontal: spacing.md,
-    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
   },
-  selectorText: { flex: 1, fontSize: 15, fontWeight: '600' },
-  timeChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm },
-  inlineButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  pickerPanel: { borderWidth: 1, borderRadius: borderRadius.lg, padding: spacing.sm, marginTop: spacing.sm, overflow: 'hidden' },
-  pickerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.sm, paddingTop: spacing.xs },
-  pickerTitle: { fontSize: 13, fontWeight: '700' },
-  pickerValue: { fontSize: 15, fontWeight: '800' },
-  picker: { alignSelf: 'stretch', minHeight: Platform.OS === 'ios' ? 216 : undefined },
-  pickerActions: { alignItems: 'flex-end', paddingTop: spacing.xs },
+
+  selectorText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+
+  helper: {
+    marginTop: 6,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+
+  pickerPanel: {
+    marginTop: spacing.sm,
+    borderWidth: 1,
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+  },
+
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+
+  pickerTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  pickerValue: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+
+  picker: {
+    alignSelf: 'stretch',
+  },
+
+  pickerActions: {
+    marginTop: spacing.sm,
+    alignItems: 'flex-end',
+  },
+
+  inlineButtons: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    flexWrap: 'wrap',
+  },
+
+  timeChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
 });
